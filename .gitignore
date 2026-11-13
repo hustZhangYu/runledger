@@ -1,0 +1,32 @@
+# ---- 你的任务数据，绝不入库 ----
+runs.json
+runs.json.tmp
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- 本地工具目录 ----
+.workbuddy/
+
+# ---- 命令行历史 / 备份文件 ----
+*.bak
+*~
+
+# 本地凭据与发布产物
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+dist/
