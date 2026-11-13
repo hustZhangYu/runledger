@@ -1,0 +1,134 @@
+name: Publish v0.1.0
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/release-v0.1.0.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: release-v0.1.0
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Publish verified source archive and release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPOSITORY: ${{ github.repository }}
+        run: |
+          python - <<'PY'
+          RELEASE_NOTES = 'RunLedger 首个公开版本：一个零依赖、离线使用的本地任务运行台账。\n\n## 功能\n\n- 树状待办与运行任务，支持父子层级、项目筛选和关键词检索。\n- 记录提交时间和预估时长，到期后进入「待看结果」队列。\n- 保存结果结论、按天回顾完成记录，支持重跑与重开。\n- 使用本地 JSON 保存数据，提供命令行录入和提醒摘要脚本。\n\n## 修复与整理\n\n- 修复并发 Web 写入覆盖记录、超时提醒分钟数和静态目录边界检查。\n- 校验 JSON 输入、任务名与预估时长；损坏台账时报错并保留原文件。\n- 补齐中英文说明、贡献指南、虚构演示数据与截图。\n- 沿用 MIT 许可证和原作者署名。\n\n## 验证\n\nWindows / Ubuntu 24.04 × Python 3.9 / 3.13 四组云端 CI 均通过，覆盖语法检查、6 项核心检查和 8 项接口回归测试。\n\nCI 记录：https://github.com/hustZhangYu/runledger/actions/runs/43447467173\n版本提交：c7d7fd7655a0d8ed96d71322f67dfeb90d7ec3df\n\n## 下载与启动\n\n下载 `runledger-0.1.0.zip` 并解压，进入 `runledger` 目录后运行：\n\n```bash\npython app.py\n```\n\nWindows 也可使用 `py -3 app.py`。浏览器打开 http://127.0.0.1:7860 即可；无需安装第三方包。\n\n`runledger-0.1.0.zip.sha256` 用于校验源码包。附件仅包含版本提交中的文件，不包含个人 `runs.json`、凭据或缓存。\n\n## 使用边界\n\n这是单机个人工具，默认只监听本机，没有认证。页面按预估时间提示查看结果，不执行任务命令，也不检测真实作业状态；不内置桌面推送。CLI 与 Web 服务不能同时写入同一个台账。\n'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import subprocess
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          import zipfile
+          
+          REPO = os.environ["GH_REPOSITORY"]
+          TOKEN = os.environ["GH_TOKEN"]
+          TAG = "v0.1.0"
+          TARGET = "c7d7fd7655a0d8ed96d71322f67dfeb90d7ec3df"
+          EXPECTED_REPO = "hustZhangYu/runledger"
+          if REPO != EXPECTED_REPO:
+              raise RuntimeError("This workflow publishes only " + EXPECTED_REPO)
+          BASE = "https://api.github.com/repos/" + REPO
+          
+          
+          def api(path, method="GET", data=None, binary=False, missing_ok=False):
+              url = path if path.startswith("https://") else BASE + path
+              if urllib.parse.urlparse(url).hostname not in ("api.github.com", "uploads.github.com"):
+                  raise RuntimeError("Unexpected API destination")
+              payload = data if binary else (json.dumps(data).encode("utf-8") if data is not None else None)
+              headers = {
+                  "Authorization": "Bearer " + TOKEN,
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                  "User-Agent": "RunLedger-release",
+                  "Content-Type": "application/octet-stream" if binary else "application/json",
+              }
+              req = urllib.request.Request(url, data=payload, method=method, headers=headers)
+              try:
+                  with urllib.request.urlopen(req, timeout=90) as response:
+                      return json.load(response)
+              except urllib.error.HTTPError as error:
+                  if missing_ok and error.code == 404:
+                      return None
+                  raise RuntimeError(f"GitHub API {method} failed with HTTP {error.code}: " + error.read().decode("utf-8")) from error
+          
+          
+          runs = api("/actions/runs?head_sha=" + TARGET + "&event=push")["workflow_runs"]
+          if not any(r["path"] == ".github/workflows/ci.yml" and r["conclusion"] == "success" for r in runs):
+              raise RuntimeError("The release commit must have a successful CI run")
+          
+          existing_tag = api("/git/ref/tags/" + TAG, missing_ok=True)
+          if existing_tag and existing_tag["object"]["sha"] != TARGET:
+              raise RuntimeError("Existing release tag points to a different commit")
+          if not existing_tag:
+              api("/git/refs", "POST", {"ref": "refs/tags/" + TAG, "sha": TARGET})
+          
+          archive = Path("runledger-0.1.0.zip")
+          subprocess.run(["git", "archive", "--format=zip", "--prefix=runledger/", "--output=" + str(archive), TARGET], check=True)
+          with zipfile.ZipFile(archive) as z:
+              if z.testzip() is not None:
+                  raise RuntimeError("Invalid source archive")
+              files = [n for n in z.namelist() if not n.endswith("/")]
+              if len(files) != 18 or "runledger/LICENSE" not in files:
+                  raise RuntimeError("Unexpected release file list")
+              if any(n.endswith("/runs.json") or "/.git/" in n or "__pycache__" in n for n in files):
+                  raise RuntimeError("Source archive contains local-only files")
+          checksum = archive.with_suffix(".zip.sha256")
+          checksum.write_text(hashlib.sha256(archive.read_bytes()).hexdigest() + "  " + archive.name + "\n", encoding="ascii")
+          assets = (archive, checksum)
+          
+          release = api("/releases/tags/" + TAG, missing_ok=True)
+          if release is None:
+              # Draft releases are not always returned by the tags endpoint.
+              release = next((r for r in api("/releases") if r["tag_name"] == TAG), None)
+          if release and not release["draft"]:
+              if {p.name for p in assets}.issubset({a["name"] for a in release["assets"]}):
+                  print("Release already published: " + release["html_url"])
+                  raise SystemExit(0)
+              raise RuntimeError("Published release already exists with missing attachments; refusing to modify it")
+          if release is None:
+              release = api("/releases", "POST", {
+                  "tag_name": TAG, "target_commitish": TARGET,
+                  "name": "RunLedger v0.1.0", "body": RELEASE_NOTES,
+                  "draft": True, "prerelease": False,
+              })
+          for path in assets:
+              existing = next((a for a in release["assets"] if a["name"] == path.name), None)
+              digest = "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+              if existing:
+                  if existing["size"] != path.stat().st_size or existing.get("digest") not in (None, digest):
+                      raise RuntimeError("Draft asset differs: " + path.name)
+                  continue
+              upload_url = release["upload_url"].split("{")[0] + "?" + urllib.parse.urlencode({"name": path.name})
+              uploaded = api(upload_url, "POST", path.read_bytes(), binary=True)
+              if uploaded["state"] != "uploaded" or uploaded["size"] != path.stat().st_size or uploaded.get("digest") not in (None, digest):
+                  raise RuntimeError("Asset verification failed: " + path.name)
+          release = api("/releases/" + str(release["id"]))
+          if not {p.name for p in assets}.issubset({a["name"] for a in release["assets"] if a["state"] == "uploaded"}):
+              raise RuntimeError("Release attachments are incomplete")
+          published = api("/releases/" + str(release["id"]), "PATCH", {
+              "body": RELEASE_NOTES, "draft": False, "prerelease": False, "make_latest": "true",
+          })
+          print("Published " + published["html_url"])
+          PY
