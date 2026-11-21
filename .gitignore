@@ -30,3 +30,7 @@ desktop.ini
 *.pem
 *.key
 dist/
+
+# 私人速记数据
+notes.json
+notes.json.tmp

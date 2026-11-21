@@ -23,6 +23,9 @@ class ApiTests(unittest.TestCase):
     def setUpClass(cls):
         cls.sandbox = tempfile.TemporaryDirectory(prefix="runledger-api-")
         cls.data = Path(cls.sandbox.name) / "runs.json"
+        cls.notes = Path(cls.sandbox.name) / "notes.json"
+        cls.original_notes = helpers.NOTES_FILE
+        helpers.NOTES_FILE = str(cls.notes)
         cls.original_data = helpers.DATA_FILE
         helpers.DATA_FILE = str(cls.data)
         cls.static = Path(cls.sandbox.name) / "static"
@@ -44,12 +47,14 @@ class ApiTests(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
         cls.thread.join()
+        helpers.NOTES_FILE = cls.original_notes
         helpers.DATA_FILE = cls.original_data
         app.STATIC_DIR = cls.original_static
         cls.sandbox.cleanup()
 
     def setUp(self):
         helpers.save_runs([])
+        helpers.save_notes([])
 
     def request(self, path, method="GET", body=None, raw=None):
         payload = raw if raw is not None else (json.dumps(body).encode("utf-8") if body is not None else None)
@@ -149,6 +154,64 @@ class ApiTests(unittest.TestCase):
             "import helpers,runpy; helpers.DATA_FILE=" + repr(str(self.data)) + "; runpy.run_path('reminder.py')"],
             cwd=str(ROOT), env=env, capture_output=True, encoding="utf-8", check=True)
         self.assertIn("60 分钟", result.stdout)
+
+
+    def test_urgent_lifecycle_and_legacy_default(self):
+        run = self.create(type="待办项", urgent=True)
+        path = "/api/runs/" + run["id"]
+        self.assertTrue(run["urgent"])
+        self.assertEqual(self.request("/api/summary")[1]["urgent_count"], 1)
+        self.assertFalse(self.request(path + "/urgent", "POST")[1]["run"]["urgent"])
+        self.assertTrue(self.request(path, "PUT", {"urgent": True})[1]["run"]["urgent"])
+        self.request(path + "/check", "POST", {"result_note": "done"})
+        self.assertEqual(self.request("/api/summary")[1]["urgent_count"], 0)
+        self.assertTrue(self.request("/api/runs")[1]["runs"][0]["urgent"])
+        self.assertEqual(self.request(path + "/urgent", "POST", {"urgent": "false"})[0], 400)
+        self.assertFalse(helpers.enrich({"id": "old"})["urgent"])
+
+    def test_notes_crud_does_not_affect_tasks(self):
+        run = self.create()
+        before = self.data.read_bytes()
+        self.assertEqual(self.request("/api/notes")[1], {"notes": []})
+        status, data = self.request("/api/notes", "POST", {"text": "结论\n下一步"})
+        self.assertEqual(status, 201)
+        note = data["note"]
+        path = "/api/notes/" + note["id"]
+        updated = self.request(path, "PUT", {"text": "updated"})[1]["note"]
+        self.assertEqual(updated["text"], "updated")
+        self.assertEqual(updated["created_at"], note["created_at"])
+        self.assertEqual(self.request("/api/notes", "POST", {"text": " "})[0], 400)
+        self.assertEqual(self.request(path, "DELETE")[0], 200)
+        self.assertEqual(self.request(path, "PUT", {"text": "gone"})[0], 404)
+        self.assertEqual(self.data.read_bytes(), before)
+        self.assertEqual(helpers.load_runs()[0]["id"], run["id"])
+
+    def test_concurrent_notes_and_corrupt_storage(self):
+        def create_note(n):
+            status, data = self.request("/api/notes", "POST", {"text": str(n)})
+            self.assertEqual(status, 201)
+            return data["note"]
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as pool:
+            notes = list(pool.map(create_note, range(24)))
+        self.assertEqual(len(helpers.load_notes()), 24)
+        self.assertEqual(len({n["id"] for n in notes}), 24)
+        for broken in ('{broken', '{}', '[12]'):
+            self.notes.write_text(broken, encoding="utf-8")
+            self.assertEqual(self.request("/api/notes", "POST", {"text": "new"})[0], 500)
+            self.assertEqual(self.request("/api/notes")[0], 500)
+            self.assertEqual(self.notes.read_text(encoding="utf-8"), broken)
+
+    def test_notes_order_and_reminder_urgent(self):
+        notes = [{"id": "n0001", "text": "old", "created_at": "2026-11-20T00:00:00+08:00"},
+                 {"id": "n0002", "text": "new", "created_at": "2026-11-21T00:00:00+08:00"}]
+        helpers.save_notes(notes)
+        self.assertEqual(self.request("/api/notes")[1]["notes"][0]["id"], "n0002")
+        self.create(type="待办项", urgent=True, task="Urgent demo")
+        result = subprocess.run([sys.executable, "-c",
+            "import helpers,runpy; helpers.DATA_FILE=" + repr(str(self.data)) + "; runpy.run_path('reminder.py')"],
+            cwd=str(ROOT), env=dict(os.environ, PYTHONUTF8="1"), capture_output=True, encoding="utf-8", check=True)
+        self.assertIn("Urgent demo", result.stdout)
+        self.assertIn("紧急任务", result.stdout)
 
 
 if __name__ == "__main__":

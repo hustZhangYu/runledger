@@ -15,10 +15,15 @@
     --bg:#F4F6F9; --card:#FFFFFF; --line:#E5EAF1; --line-s:#EFF3F8; --text:#1E2836;
     --sh:0 1px 2px rgba(20,38,60,.04), 0 1px 3px rgba(20,38,60,.03);
     --sh-h:0 4px 14px rgba(20,38,60,.08);
+    /* 手写体：标题走行楷（有笔锋），正文走楷书（小字号也认得出），
+       数字和代码仍用无衬线／等宽，避免手写数字宽窄不齐把表格挤乱 */
+    --f-hand:"LXGW WenKai","霞鹜文楷","STKaiti","华文楷体","KaiTi","楷体","楷体_GB2312","Microsoft YaHei",sans-serif;
+    --f-title:"LXGW WenKai","霞鹜文楷","STXingkai","华文行楷","STKaiti","华文楷体","KaiTi","楷体",sans-serif;
+    --f-num:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
   }
   *{box-sizing:border-box;}
-  body{margin:0;font-size:14px;line-height:1.55;
-       font-family:-apple-system,"Segoe UI","Microsoft YaHei","微软雅黑",sans-serif;
+  body{margin:0;font-size:14.5px;line-height:1.62;
+       font-family:var(--f-hand);font-synthesis-weight:none;
        background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
   header{background:var(--card);border-bottom:1px solid var(--line);padding:14px 30px;
          display:flex;align-items:center;justify-content:space-between;gap:16px;}
@@ -26,8 +31,9 @@
   .logo{width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
         background:linear-gradient(140deg,#3B7FC4,#2A6299);box-shadow:0 2px 6px rgba(47,111,176,.28);}
   .logo svg{width:18px;height:18px;color:#fff;}
-  header h1{font-size:16px;margin:0;font-weight:600;letter-spacing:.2px;color:var(--ink);}
-  header .sub{color:var(--sub);font-size:12px;margin-top:1px;}
+  header h1{font-family:var(--f-title);font-size:21px;line-height:1.25;margin:0;font-weight:400;
+            letter-spacing:.8px;color:var(--ink);}
+  header .sub{color:var(--sub);font-size:12.5px;margin-top:2px;letter-spacing:.2px;}
   .btn{background:var(--blue);color:#fff;border:1px solid var(--blue);border-radius:8px;
        padding:7px 15px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;
        box-shadow:0 1px 2px rgba(47,111,176,.22);transition:background .15s,border-color .15s,transform .12s,box-shadow .15s;}
@@ -48,8 +54,9 @@
   .card .ico{width:26px;height:26px;border-radius:8px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
              background:var(--acc-l);color:var(--acc);}
   .card .ico svg{width:15px;height:15px;display:block;}
-  .card .l{font-size:12px;color:var(--sub);font-weight:500;letter-spacing:.15px;}
-  .card .n{font-size:27px;line-height:1;font-weight:700;color:var(--acc);font-variant-numeric:tabular-nums;letter-spacing:-.5px;}
+  .card .l{font-size:12.5px;color:var(--sub);font-weight:400;letter-spacing:.4px;}
+  .card .n{font-family:var(--f-title);font-size:31px;line-height:1.05;font-weight:400;color:var(--acc);
+           font-variant-numeric:tabular-nums;letter-spacing:.5px;}
   .card.run    {--acc:var(--blue);   --acc-l:var(--blue-l);}
   .card.pending{--acc:var(--orange); --acc-l:var(--orange-l);}
   .card.done   {--acc:var(--green);  --acc-l:var(--green-l);}
@@ -58,22 +65,27 @@
   .card.pending{background:linear-gradient(180deg,#FFFCF8 0%,#FFFFFF 72%);}
   .section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px 20px;
            margin-bottom:18px;box-shadow:var(--sh);}
-  .section h2{font-size:14px;font-weight:600;margin:0 0 14px;display:flex;align-items:center;gap:8px;
-              letter-spacing:.2px;color:var(--ink);}
+  .section h2{font-family:var(--f-title);font-size:17.5px;font-weight:400;margin:0 0 15px;
+              display:flex;align-items:center;gap:9px;letter-spacing:.8px;color:var(--ink);line-height:1.3;}
   .section h2::before{content:"";width:3px;height:13px;border-radius:2px;background:var(--blue);flex:0 0 auto;}
   #pendingSection h2::before{background:var(--orange);}
   #todoSection h2::before{background:var(--violet);}
   #allSection h2::before{background:var(--gray);}
   #doneSection h2::before{background:var(--green);}
+  #urgentSection h2::before{background:var(--red);}
   .section h2.clickable{cursor:pointer;user-select:none;transition:color .15s;}
   .section h2.clickable:hover{color:var(--blue);}
   .badge{background:var(--orange-l);color:var(--orange);border:1px solid var(--orange-b);
          border-radius:999px;padding:0 9px;font-size:11.5px;font-weight:700;line-height:18px;}
   .badge.blue{background:var(--blue-l);color:var(--blue);border-color:var(--blue-b);}
   .badge.green{background:var(--green-l);color:var(--green);border-color:var(--green-b);}
+  .badge.red{background:var(--red-l);color:var(--red);border-color:var(--red-b);}
   .pq-row{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);
           border-radius:10px;background:#fff;transition:background .15s,border-color .15s,box-shadow .15s;}
   .pq-row:hover{background:#FCFDFF;border-color:var(--blue-b);box-shadow:var(--sh);}
+  .pq-row.urg{border-color:var(--red-b);background:linear-gradient(90deg,#FEF6F5,#FFFCFC);
+              box-shadow:inset 3px 0 0 var(--red);}
+  .pq-row.urg:hover{background:#FDF4F3;border-color:var(--red-b);}
   .pq-row .t{flex:1;font-weight:600;font-size:13.5px;color:var(--ink);min-width:0;}
   .pq-row .meta{color:var(--sub);font-size:12px;}
   .pq-row .over{color:var(--orange);font-weight:700;font-size:12.5px;
@@ -90,6 +102,24 @@
   .todo-node{margin-bottom:7px;}
   .todo-node.hot > .pq-row{border-color:var(--orange-b);background:linear-gradient(90deg,#FFF8F1,#FFFDFB);
                             box-shadow:inset 3px 0 0 var(--orange);}
+  /* 紧急：红色更强调，写在 hot 之后所以两者并存时红色优先 */
+  .todo-node.urgent > .pq-row{border-color:var(--red-b);background:linear-gradient(90deg,#FEF6F5,#FFFCFC);
+                              box-shadow:inset 3px 0 0 var(--red);}
+  .child.urgent{border-color:var(--red-b);border-left-color:var(--red);background:#FEF8F7;}
+  /* 旗标按钮：常驻但低调，标了才变红 */
+  .flag{background:none;border:none;box-shadow:none;padding:0;margin-right:5px;cursor:pointer;
+        color:#C9D1DC;display:inline-flex;align-items:center;vertical-align:-1px;
+        transition:color .15s,transform .12s;flex:0 0 auto;}
+  .flag svg{width:11px;height:11px;display:block;}
+  .flag:hover{color:var(--red);transform:scale(1.18);}
+  .flag.on{color:var(--red);}
+  .flag.on:hover{transform:scale(1.18);}
+  tr.urgent{background:#FEFAF9;}
+  tr.urgent:hover{background:#FDF5F4;}
+  label.ck{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink);
+           font-weight:400;cursor:pointer;user-select:none;margin:0;}
+  input[type=checkbox]{width:15px;height:15px;margin:0;padding:0;border:none;box-shadow:none;
+                       accent-color:var(--red);cursor:pointer;flex:0 0 auto;}
   .todo-children{margin-top:1px;}
   .toggle{display:inline-flex;width:16px;justify-content:center;cursor:pointer;color:var(--gray);
           font-size:10px;flex:0 0 auto;user-select:none;transition:color .15s;}
@@ -163,13 +193,67 @@
          box-shadow:0 16px 48px rgba(16,28,45,.18),0 2px 8px rgba(16,28,45,.06);
          animation:pop .18s ease-out;}
   @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.985);}to{opacity:1;transform:none;}}
-  .modal h3{margin:0 0 16px;font-size:15px;font-weight:600;color:var(--ink);letter-spacing:.2px;}
+  .modal h3{margin:0 0 16px;font-family:var(--f-title);font-size:19px;font-weight:400;
+            color:var(--ink);letter-spacing:.8px;}
   .field{margin-bottom:13px;}
   .field label{display:block;font-size:12px;color:var(--sub);margin-bottom:5px;font-weight:500;}
   .field input,.field textarea,.field select{width:100%;}
   .field textarea{min-height:66px;resize:vertical;line-height:1.6;}
   .modal .foot{display:flex;justify-content:flex-end;gap:9px;margin-top:10px;}
   .err{color:var(--red);font-size:12px;min-height:16px;}
+  /* ---------- 速记侧栏 ---------- */
+  body{padding-right:0;transition:padding-right .22s ease;}
+  body.nr-open{padding-right:312px;}
+  .note-rail{position:fixed;top:0;right:0;bottom:0;width:312px;background:var(--card);
+             border-left:1px solid var(--line);box-shadow:-6px 0 26px rgba(20,38,60,.055);
+             display:flex;flex-direction:column;z-index:40;
+             transition:transform .24s cubic-bezier(.4,0,.2,1),box-shadow .24s;}
+  .note-rail.fold{transform:translateX(100%);box-shadow:none;}
+  .nr-head{display:flex;align-items:center;gap:8px;padding:15px 13px 11px 17px;
+           border-bottom:1px solid var(--line-s);flex:0 0 auto;}
+  .nr-head .h{font-family:var(--f-title);font-size:15.5px;font-weight:400;color:var(--ink);
+              display:flex;align-items:center;gap:8px;letter-spacing:.8px;}
+  .nr-head .h::before{content:"";width:3px;height:12px;border-radius:2px;background:var(--violet);flex:0 0 auto;}
+  .nr-head .sp{flex:1;}
+  .badge.violet{background:var(--violet-l);color:var(--violet);border-color:#DFE3F4;}
+  .nr-input{padding:12px 15px 11px;border-bottom:1px solid var(--line-s);flex:0 0 auto;}
+  .nr-input textarea{width:100%;min-height:64px;resize:vertical;font-size:12.5px;line-height:1.6;}
+  .nr-bar{display:flex;align-items:center;gap:7px;margin-top:7px;}
+  .nr-hint{font-size:11px;color:var(--gray);flex:1;line-height:1.4;}
+  .nr-list{flex:1;overflow-y:auto;padding:2px 15px 20px;}
+  .nr-item{padding:10px 0;border-bottom:1px dashed var(--line);}
+  .nr-item:last-child{border-bottom:none;}
+  .nr-item .t{font-size:12.5px;line-height:1.58;color:var(--ink);white-space:pre-wrap;word-break:break-word;}
+  .nr-item .m{display:flex;align-items:center;gap:8px;margin-top:5px;}
+  .nr-item .when{font-size:11px;color:var(--gray);font-variant-numeric:tabular-nums;}
+  .nr-item .ops{margin-left:auto;display:flex;gap:1px;opacity:.4;transition:opacity .15s;}
+  .nr-item:hover .ops,.nr-item.editing .ops{opacity:1;}
+  .nr-item.editing{background:var(--violet-l);margin:0 -7px;padding:10px 7px;border-radius:9px;border-bottom-color:transparent;}
+  .nr-empty{color:var(--gray);font-size:12px;text-align:center;padding:26px 8px;line-height:1.9;}
+  .note-tab{position:fixed;top:50%;right:0;transform:translateY(-50%);
+            writing-mode:vertical-rl;letter-spacing:4px;font-size:12px;font-weight:600;
+            padding:15px 9px;background:var(--card);color:var(--violet);font-family:inherit;
+            border:1px solid var(--line);border-right:none;border-radius:10px 0 0 10px;
+            box-shadow:-2px 0 12px rgba(20,38,60,.08);cursor:pointer;z-index:41;display:none;
+            transition:background .15s,color .15s;}
+  .note-tab.show{display:block;}
+  .note-tab:hover{background:var(--violet-l);}
+  @media (max-width:1180px){
+    body.nr-open{padding-right:0;}
+    .note-rail{box-shadow:-10px 0 36px rgba(20,38,60,.20);}
+  }
+  /* ---------- 手写体适配 ----------
+     楷书的字形比雅黑瘦一圈，同等字号会显得小，所以正文小字统一放大半号到一号；
+     数字、时间、日期一律走无衬线 tabular，不然手写数字宽窄不一会把表格列撑得参差。 */
+  .badge,.chip,.type-tag{font-size:12px;font-weight:400;letter-spacing:.2px;}
+  th{font-size:12px;font-weight:400;letter-spacing:1px;color:#59647A;}
+  .pq-row .t,.pq-row .main .t,.child .ct,.task-cell,.dn-t{font-size:14px;font-weight:400;}
+  .pq-row .main .meta,.child .cmeta,.act-cell,.anote,.rnote,.dn-r{font-size:12.5px;}
+  .empty,.nr-empty,.field label,.filters{font-size:13px;}
+  .field label{font-weight:400;}
+  .times,.cd,.day-h .d,.day-h .n,.nr-item .when{font-family:var(--f-num);}
+  .times{font-size:12.5px;}
+  .cd{font-size:13.5px;font-weight:400;}
   /* 滚动条 */
   ::-webkit-scrollbar{width:11px;height:11px;}
   ::-webkit-scrollbar-track{background:transparent;}
@@ -231,6 +315,13 @@
     </div>
   </div>
 
+  <div class="section" id="urgentSection" style="display:none;">
+    <h2>紧急 <span class="badge red" id="urgentBadge">0</span>
+      <span style="color:var(--gray);font-size:11px;font-weight:400;margin-left:2px;">未完成的紧急任务，全部置顶在这里</span>
+    </h2>
+    <div id="urgentList"></div>
+  </div>
+
   <div class="section" id="pendingSection">
     <h2>待看结果队列 <span class="badge" id="pqBadge">0</span></h2>
     <div id="pendingList"><div class="empty">暂无待看结果的运行任务 ✓</div></div>
@@ -258,6 +349,7 @@
           <option>待提交</option><option>运行中</option><option>待看结果</option>
           <option>待办</option><option>已完成</option><option>异常</option>
         </select>
+        <label class="ck"><input type="checkbox" id="fUrgent"> 只看紧急</label>
         <span class="meta" id="lastSync" style="color:var(--gray);font-size:12px;"></span>
       </div>
       <table>
@@ -272,6 +364,25 @@
     <div id="doneList"><div class="empty">暂无已完成记录</div></div>
   </div>
 </main>
+
+<!-- 速记侧栏：贴右侧固定，收起时留一条竖排书签 -->
+<button class="note-tab" id="noteTab" title="展开速记栏">速记</button>
+<aside class="note-rail" id="noteRail">
+  <div class="nr-head">
+    <span class="h">速记 <span class="badge violet" id="noteBadge">0</span></span>
+    <span class="sp"></span>
+    <button class="btn sm link" id="noteFold" title="收起侧栏">⟩⟩</button>
+  </div>
+  <div class="nr-input">
+    <textarea id="noteText" placeholder="刚讨论的解决方案，一句话记下来…"></textarea>
+    <div class="nr-bar">
+      <span class="nr-hint" id="noteHint">Enter 保存 · Shift+Enter 换行</span>
+      <button class="btn ghost sm" id="noteCancel" style="display:none;">取消</button>
+      <button class="btn sm" id="noteSave">记下</button>
+    </div>
+  </div>
+  <div class="nr-list" id="noteList"></div>
+</aside>
 
 <div class="mask" id="mask">
   <div class="modal">
@@ -291,6 +402,7 @@
     <div class="field" id="rowJob"><label>集群作业号（选填，仅运行任务）</label><input id="fJob" placeholder="如：123456"></div>
     <div class="field" id="rowEst"><label>预估运行时长（仅运行任务）</label><input id="fEst" placeholder="如 30m / 2h / 1h30m"></div>
     <div class="field" id="rowParent"><label>隶属待办（选填；待办项可挂为子待办，运行任务挂到待办下）</label><select id="fParent"><option value="">（不隶属，顶级待办 / 独立运行任务）</option></select></div>
+    <div class="field"><label class="ck"><input type="checkbox" id="fUrgentChk"> 标为紧急（红色高亮 + 置顶）</label></div>
     <div class="err" id="formErr"></div>
     <div class="foot">
       <button class="btn ghost" id="cancelBtn">取消</button>
@@ -390,6 +502,7 @@ async function load(){
     PROJECTS = list.projects || [];
     fillSelects();
     renderSummary(sum);
+    renderUrgent(sum.urgent || []);
     renderPending(sum.pending);
     renderTodos(list.runs.filter(r=>r.type==="待办项" && r.status==="待办"));
     renderTable(list.runs);
@@ -404,6 +517,51 @@ function renderSummary(s){
   document.getElementById("cDone").textContent = s.done_week||0;
   document.getElementById("cErr").textContent = s.counts["异常"]||0;
   document.getElementById("cTodo").textContent = s.todo_count||0;
+}
+const FLAG_SVG = '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.7 1.5v9.1"/><path d="M2.7 2.2h6.2L7.4 4.3l1.5 2.1H2.7z"/></svg>';
+function flagBtn(r){
+  const on = !!r.urgent;
+  return `<button class="flag${on?" on":""}" title="${on?"取消紧急标记":"标为紧急"}"
+     onclick="toggleUrgent('${r.id}')">${FLAG_SVG}</button>`;
+}
+async function toggleUrgent(id){
+  try{ await api(`/api/runs/${id}/urgent`,"POST"); load(); }
+  catch(e){ console.error("紧急标记失败", e); }
+}
+// 紧急项在同级里排前面（其余保持创建时间顺序）
+function urgentFirst(a,b){
+  return ((b.urgent?1:0)-(a.urgent?1:0)) || String(a.created_at||"").localeCompare(String(b.created_at||""));
+}
+function renderUrgent(arr){
+  const sec=document.getElementById("urgentSection"), box=document.getElementById("urgentList");
+  if(!sec||!box) return;
+  document.getElementById("urgentBadge").textContent = arr.length;
+  if(!arr.length){ sec.style.display="none"; box.innerHTML=""; return; }
+  sec.style.display="";
+  box.innerHTML="";
+  const all = window._runs||[];
+  arr.forEach(r=>{
+    const isRun=(r.type||"运行任务")==="运行任务";
+    const pname = r.parent_id ? (all.find(x=>x.id===r.parent_id)||{}).task : "";
+    const meta=[];
+    if(pname) meta.push(`隶属 ${pname}`);
+    meta.push(r.project);
+    if(isRun && r.status==="运行中") meta.push(`剩 ${fmtMin(r.remaining_min)}`);
+    if(isRun && r.status==="待看结果") meta.push(`已超时 ${fmtMin(r.overdue_min)}`);
+    if(r.action) meta.push(r.action);
+    let ops="";
+    if(isRun && r.status==="待提交") ops+=`<button class="btn sm" onclick="doSubmit('${r.id}')">提交</button>`;
+    else if(isRun && r.status==="异常") ops+=`<button class="btn sm warn" onclick="doRerun('${r.id}')">重跑</button>`;
+    else ops+=`<button class="btn sm" onclick="doCheck('${r.id}')">${isRun?"看结果":"完成"}</button>`;
+    ops+=`<button class="btn sm link danger" onclick="toggleUrgent('${r.id}')">取消标记</button>`;
+    const div=document.createElement("div"); div.className="pq-row urg";
+    div.innerHTML=`<div class="main">
+        <div class="t">${flagBtn(r)}${esc(r.task)} <span class="chip ${r.status}">${r.status}</span></div>
+        <div class="meta">${meta.map(esc).join(" · ")}</div>
+      </div>
+      <div class="right">${ops}</div>`;
+    box.appendChild(div);
+  });
 }
 function renderPending(arr){
   const box=document.getElementById("pendingList"), badge=document.getElementById("pqBadge");
@@ -431,7 +589,7 @@ function renderTodos(arr){
   if(!arr.length){ box.innerHTML='<div class="empty">暂无待办项 ✓</div>'; return; }
   const all = window._runs||[];
   // 顶层 = 父节点不在未完成集合里（无父、父已完成或父已不存在），避免父已完成时子待办一起消失
-  const topTodos = arr.filter(r=> !r.parent_id || !arr.some(x=>x.id===r.parent_id));
+  const topTodos = arr.filter(r=> !r.parent_id || !arr.some(x=>x.id===r.parent_id)).sort(urgentFirst);
   box.innerHTML="";
   topTodos.forEach(r=> renderTodoNode(r, all, 0, box));
 }
@@ -448,21 +606,26 @@ function isHot(todoId, all){
 }
 function renderTodoNode(todo, all, depth, box){
   const hot = isHot(todo.id, all);
-  const childTodos = all.filter(k=>k.parent_id===todo.id && k.type==="待办项" && k.status==="待办");
-  const childRuns = all.filter(k=>k.parent_id===todo.id && k.type!=="待办项");
+  const childTodos = all.filter(k=>k.parent_id===todo.id && k.type==="待办项" && k.status==="待办").sort(urgentFirst);
+  // 已查看过（已完成）的运行任务不再占位，需要回看结果去「全部任务」里筛「已完成」
+  const childRuns = all.filter(k=>k.parent_id===todo.id && k.type!=="待办项" && k.status!=="已完成").sort(urgentFirst);
   const hasChildren = childTodos.length>0 || childRuns.length>0;
   const isCollapsed = collapsed.has(todo.id);
 
-  const node=document.createElement("div"); node.className="todo-node"+(hot?" hot":"");
+  const node=document.createElement("div");
+  node.className="todo-node"+(hot?" hot":"")+(todo.urgent?" urgent":"");
   const head=document.createElement("div"); head.className="pq-row";
   head.style.marginLeft=(depth*22)+"px";
   const arrow = hasChildren
     ? `<span class="toggle" onclick="toggleNode('${todo.id}')" title="折叠/展开">${isCollapsed?'▶':'▼'}</span>`
     : `<span class="toggle empty"></span>`;
-  const cnt = hasChildren ? ` · ${childTodos.length}子待办 / ${childRuns.length}运行` : "";
+  const parts=[];
+  if(childTodos.length) parts.push(`${childTodos.length} 子待办`);
+  if(childRuns.length) parts.push(`${childRuns.length} 运行`);
+  const cnt = parts.length ? ` · ${parts.join(" / ")}` : "";
   head.innerHTML=`${arrow}
     <div class="main">
-      <div class="t">${esc(todo.task)}</div>
+      <div class="t">${flagBtn(todo)}${esc(todo.task)}</div>
       <div class="meta">${esc(todo.project)}${todo.action?(' · '+esc(todo.action)):''}${cnt}${timeMeta(todo)}</div>
     </div>
     <div class="right">
@@ -477,7 +640,7 @@ function renderTodoNode(todo, all, depth, box){
     const children=document.createElement("div"); children.className="todo-children";
     childTodos.forEach(k=> renderTodoNode(k, all, depth+1, children));
     childRuns.forEach(k=>{
-      const c=document.createElement("div"); c.className="child";
+      const c=document.createElement("div"); c.className="child"+(k.urgent?" urgent":"");
       c.style.marginLeft=((depth+1)*22+14)+"px";
       let cd, act="";
       if(k.status==="运行中") cd=`<span class="cd run">剩 ${fmtMin(k.remaining_min)}</span>`;
@@ -490,7 +653,7 @@ function renderTodoNode(todo, all, depth, box){
       if(k.start_at) ktime.push(`创建 ${fmtTime(k.start_at)}`);
       if(k.done_at) ktime.push(`完成 ${fmtTime(k.done_at)}`);
       c.innerHTML=`<div class="main">
-          <div class="ct">↳ ${esc(k.task)} <span class="chip ${k.status}">${k.status}</span></div>
+          <div class="ct">↳ ${flagBtn(k)}${esc(k.task)} <span class="chip ${k.status}">${k.status}</span></div>
           ${ktime.length?`<div class="cmeta">${ktime.join(" · ")}</div>`:""}
         </div>
         <div class="right">${cd}<div class="acts">${act}</div></div>`;
@@ -512,15 +675,17 @@ function hl(s){
 }
 function renderTable(runs){
   const fp=document.getElementById("fProject").value, fs=document.getElementById("fStatus").value, ft=document.getElementById("fType").value;
+  const fu=document.getElementById("fUrgent").checked;
   const kw=document.getElementById("fKw").value.trim().toLowerCase();
   const tb=document.getElementById("tbody");
-  let rows = runs.filter(r=>(!fp||r.project===fp)&&(!fs||r.status===fs)&&(!ft||(r.type||"运行任务")===ft));
+  let rows = runs.filter(r=>(!fp||r.project===fp)&&(!fs||r.status===fs)&&(!ft||(r.type||"运行任务")===ft)&&(!fu||r.urgent));
   if(kw) rows = rows.filter(r=>[r.task,r.action,r.result_note,r.project]
       .some(v=>String(v||"").toLowerCase().includes(kw)));
   if(!rows.length){ tb.innerHTML='<tr><td colspan="7" class="empty">没有符合条件的任务</td></tr>'; return; }
   tb.innerHTML="";
   rows.forEach(r=>{
     const tr=document.createElement("tr");
+    if(r.urgent) tr.className="urgent";
     const isRun = (r.type||"运行任务")==="运行任务";
     const pname = r.parent_id ? ((window._runs||[]).find(x=>x.id===r.parent_id)||{}).task : "";
     let cd = "—";
@@ -531,7 +696,7 @@ function renderTable(runs){
     if(r.action) subs.push(`<div class="anote">动作：${hl(r.action)}</div>`);
     if(r.result_note) subs.push(`<div class="rnote">${hl(r.result_note)}</div>`);
     tr.innerHTML=`
-      <td class="task-cell">${hl(r.task)}${subs.join("")}</td>
+      <td class="task-cell">${flagBtn(r)}${hl(r.task)}${subs.join("")}</td>
       <td>${esc(r.project)}</td>
       <td><span class="type-tag">${esc(r.type||"运行任务")}</span></td>
       <td><span class="chip ${r.status}">${r.status}</span></td>
@@ -695,6 +860,7 @@ function openAdd(fromTodo, childType){
   editId=null; document.getElementById("modalTitle").textContent="新增";
   ["fTask","fAction","fJob","fEst"].forEach(id=>document.getElementById(id).value="");
   document.getElementById("fParent").value="";
+  document.getElementById("fUrgentChk").checked=false;
   document.getElementById("fTypeModal").value = childType || "运行任务";
   if(fromTodo){
     const p = window._runs?.find(x=>x.id===fromTodo);
@@ -718,6 +884,7 @@ function openEdit(id){
     document.getElementById("fJob").value=r.job_id||"";
     document.getElementById("fEst").value=r.est_label||"";
     document.getElementById("fParent").value=r.parent_id||"";
+    document.getElementById("fUrgentChk").checked=!!r.urgent;
   }
   document.getElementById("formErr").textContent="";
   toggleTypeRows();
@@ -731,7 +898,8 @@ async function save(){
     project:document.getElementById("fProj").value,
     action:document.getElementById("fAction").value.trim(),
     job_id:document.getElementById("fJob").value.trim(),
-    parent_id:document.getElementById("fParent").value
+    parent_id:document.getElementById("fParent").value,
+    urgent:document.getElementById("fUrgentChk").checked
   };
   if(type==="运行任务") body.est_label=document.getElementById("fEst").value.trim();
   const err=document.getElementById("formErr");
@@ -744,6 +912,113 @@ async function save(){
     load();
   }catch(e){ err.textContent=e.message; }
 }
+// ---------- 速记 ----------
+let NOTES = [];
+let noteEditId = null;
+let noteOpen = true;
+try{
+  const v = localStorage.getItem("rt.note.open");
+  noteOpen = (v === null) ? window.innerWidth >= 1180 : v === "1";
+}catch(e){ noteOpen = window.innerWidth >= 1180; }
+
+function applyNoteState(){
+  const rail=document.getElementById("noteRail"), tab=document.getElementById("noteTab");
+  if(!rail) return;
+  rail.classList.toggle("fold", !noteOpen);
+  tab.classList.toggle("show", !noteOpen);
+  document.body.classList.toggle("nr-open", noteOpen);   // 展开时给主内容让出宽度，避免遮挡
+}
+function toggleNotes(){
+  noteOpen = !noteOpen;
+  try{ localStorage.setItem("rt.note.open", noteOpen ? "1" : "0"); }catch(e){}
+  applyNoteState();
+  if(noteOpen) document.getElementById("noteText").focus();
+}
+function fmtNoteTime(s){
+  if(!s) return "";
+  const d = new Date(s);
+  if(isNaN(d)) return "";
+  const now = new Date(), p = n=>String(n).padStart(2,'0');
+  const hm = `${p(d.getHours())}:${p(d.getMinutes())}`;
+  const same = (a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+  if(same(d,now)) return "今天 "+hm;
+  const y = new Date(now); y.setDate(now.getDate()-1);
+  if(same(d,y)) return "昨天 "+hm;
+  return `${d.getMonth()+1}/${d.getDate()} ${hm}`;
+}
+function renderNotes(){
+  const box=document.getElementById("noteList");
+  if(!box) return;
+  document.getElementById("noteBadge").textContent = NOTES.length;
+  if(!NOTES.length){
+    box.innerHTML='<div class="nr-empty">还没有速记<br>讨论完随手记一句，回头能翻到</div>';
+    return;
+  }
+  box.innerHTML="";
+  NOTES.forEach(n=>{
+    const div=document.createElement("div");
+    div.className="nr-item"+(n.id===noteEditId?" editing":"");
+    div.innerHTML=`<div class="t">${esc(n.text)}</div>
+      <div class="m"><span class="when">${fmtNoteTime(n.created_at)}</span>
+        <div class="ops">
+          <button class="btn sm link" onclick="editNote('${n.id}')">改</button>
+          <button class="btn sm link danger" onclick="delNote('${n.id}')">删</button>
+        </div>
+      </div>`;
+    box.appendChild(div);
+  });
+}
+async function loadNotes(){
+  try{
+    const d = await api("/api/notes");
+    NOTES = d.notes || [];
+    renderNotes();
+  }catch(e){ console.error("速记加载失败", e); }
+}
+function resetNoteInput(){
+  noteEditId = null;
+  document.getElementById("noteText").value = "";
+  document.getElementById("noteSave").textContent = "记下";
+  document.getElementById("noteCancel").style.display = "none";
+  document.getElementById("noteHint").textContent = "Enter 保存 · Shift+Enter 换行";
+}
+function editNote(id){
+  const n = NOTES.find(x=>x.id===id);
+  if(!n) return;
+  noteEditId = id;
+  const ta = document.getElementById("noteText");
+  ta.value = n.text;
+  ta.focus();
+  document.getElementById("noteSave").textContent = "更新";
+  document.getElementById("noteCancel").style.display = "";
+  document.getElementById("noteHint").textContent = "正在修改 · " + fmtNoteTime(n.created_at);
+  renderNotes();
+}
+async function saveNote(){
+  const ta = document.getElementById("noteText");
+  const text = ta.value.trim();
+  if(!text){ ta.focus(); return; }
+  const btn = document.getElementById("noteSave");
+  btn.disabled = true;
+  try{
+    if(noteEditId) await api(`/api/notes/${noteEditId}`, "PUT", {text});
+    else await api("/api/notes", "POST", {text});
+    resetNoteInput();
+    await loadNotes();
+    ta.focus();
+  }catch(e){
+    console.error(e);
+    document.getElementById("noteHint").textContent = "保存失败：" + e.message;
+  }finally{ btn.disabled = false; }
+}
+function delNote(id){
+  openMini("确认删除这条速记？不可撤销。", false, "删除", async ()=>{
+    await api(`/api/notes/${id}`, "DELETE");
+    if(noteEditId === id) resetNoteInput();
+    await loadNotes();
+  });
+}
+
 // init
 fillSelects();
 applyAllState();
@@ -758,8 +1033,25 @@ document.getElementById("fProject").onchange=load;
 document.getElementById("fType").onchange=load;
 document.getElementById("fStatus").onchange=load;
 document.getElementById("fKw").oninput=()=>renderTable(window._runs||[]);
+document.getElementById("fUrgent").onchange=()=>renderTable(window._runs||[]);
+// 速记
+document.getElementById("noteFold").onclick=toggleNotes;
+document.getElementById("noteTab").onclick=toggleNotes;
+document.getElementById("noteSave").onclick=saveNote;
+document.getElementById("noteCancel").onclick=resetNoteInput;
+document.getElementById("noteText").addEventListener("keydown", e=>{
+  // isComposing：中文输入法选词时的回车不能当保存
+  if(e.key==="Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); saveNote(); }
+  if(e.key==="Escape" && noteEditId){ resetNoteInput(); renderNotes(); }
+});
+applyNoteState();
+loadNotes();
 load();
 setInterval(load, 30000);
+// 速记只在输入框空闲时静默刷新，避免打断正在输入的内容
+setInterval(()=>{
+  if(!noteEditId && !document.getElementById("noteText").value.trim()) loadNotes();
+}, 60000);
 </script>
 </body>
 </html>

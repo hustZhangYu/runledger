@@ -16,8 +16,8 @@ except Exception as e:
     print(f"ERROR: JSON 解析失败 - {e}")
     sys.exit(1)
 
-if not isinstance(body, dict) or any(v is not None and not isinstance(v, str) for v in body.values()):
-    print("ERROR: 输入必须是 JSON 对象，字段值须为字符串或 null")
+if not isinstance(body, dict) or any((v is not None and not isinstance(v, bool)) if k == "urgent" else (v is not None and not isinstance(v, str)) for k, v in body.items()):
+    print("ERROR: 输入必须是 JSON 对象，urgent 须为布尔值或 null，其余字段须为字符串或 null")
     sys.exit(1)
 
 task = (body.get("task") or "").strip()
@@ -64,6 +64,7 @@ rec = {
     "submit_time": None,
     "done_at": None,
     "status": status0,
+    "urgent": bool(body.get("urgent")),
     "result_note": "",
     "created_at": helpers.now_iso(),
     "updated_at": helpers.now_iso(),

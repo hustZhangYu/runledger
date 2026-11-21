@@ -47,6 +47,10 @@ def _read_body(handler):
     if not isinstance(body, dict):
         raise ValueError("请求体必须是 JSON 对象")
     for key, value in body.items():
+        if key == "urgent":
+            if value is not None and not isinstance(value, bool):
+                raise ValueError("urgent 必须是布尔值或 null")
+            continue
         if value is not None and not isinstance(value, str):
             raise ValueError(f"{key} 必须是字符串或 null")
     return body
@@ -129,6 +133,7 @@ def api_create(body):
         "submit_time": st,
         "done_at": None,
         "status": status0,
+        "urgent": bool(body.get("urgent")),
         "result_note": "",
         "created_at": helpers.now_iso(),
         "updated_at": helpers.now_iso(),
@@ -171,6 +176,8 @@ def api_update(rid, body):
         return {"error": "运行任务需要填预估时长（如 30m / 2h / 1h30m）"}, 400
     if "parent_id" in body:
         rec["parent_id"] = _resolve_parent(runs, body.get("parent_id"), rec.get("id"))
+    if "urgent" in body and body["urgent"] is not None:
+        rec["urgent"] = body["urgent"]
     if "status" in body and body["status"] in helpers.STATUSES:
         rec["status"] = body["status"]
     # 类型与状态一致性：待办项只允许 待办/已完成
@@ -283,6 +290,72 @@ def api_reopen(rid):
     return {"run": helpers.enrich(rec)}, 200
 
 
+@_transaction
+def api_urgent(rid, body=None):
+    """切换 / 设置紧急标记。body 省略 urgent 时为「一键翻转」，便于脚本调用。"""
+    runs = helpers.load_runs()
+    rec = _find(runs, rid)
+    if not rec:
+        return {"error": "未找到该任务"}, 404
+    if body and body.get("urgent") is not None:
+        rec["urgent"] = bool(body["urgent"])
+    else:
+        rec["urgent"] = not bool(rec.get("urgent"))
+    rec["updated_at"] = helpers.now_iso()
+    helpers.save_runs(runs)
+    return {"run": helpers.enrich(rec)}, 200
+
+
+
+def api_notes_list():
+    """按创建时间倒序返回全部速记（最新的在最前）。"""
+    notes = helpers.load_notes()
+    notes.sort(key=lambda n: (n.get("created_at") or "", n.get("id") or ""), reverse=True)
+    return {"notes": notes}
+
+
+
+@_transaction
+def api_note_create(body):
+    text = (body.get("text") or "").strip()
+    if not text:
+        return {"error": "速记内容不能为空"}, 400
+    notes = helpers.load_notes()
+    now = helpers.now_iso()
+    rec = {"id": helpers.new_note_id(notes), "text": text,
+           "created_at": now, "updated_at": now}
+    notes.append(rec)
+    helpers.save_notes(notes)
+    return {"note": rec}, 201
+
+
+
+@_transaction
+def api_note_update(nid, body):
+    notes = helpers.load_notes()
+    rec = next((n for n in notes if n.get("id") == nid), None)
+    if not rec:
+        return {"error": "未找到该速记"}, 404
+    text = (body.get("text") or "").strip()
+    if not text:
+        return {"error": "速记内容不能为空"}, 400
+    rec["text"] = text
+    rec["updated_at"] = helpers.now_iso()
+    helpers.save_notes(notes)
+    return {"note": rec}, 200
+
+
+
+@_transaction
+def api_note_delete(nid):
+    notes = helpers.load_notes()
+    if not any(n.get("id") == nid for n in notes):
+        return {"error": "未找到该速记"}, 404
+    helpers.save_notes([n for n in notes if n.get("id") != nid])
+    return {"ok": True}, 200
+
+
+
 def api_summary():
     runs = helpers.load_runs()
     helpers.recompute(runs)
@@ -304,8 +377,15 @@ def api_summary():
     pending = [helpers.enrich(r, now) for r in runs if r.get("status") == "待看结果"]
     todo_open = [helpers.enrich(r, now) for r in runs
                  if r.get("type") == "待办项" and r.get("status") == "待办"]
+    # 紧急：只列未完成的（已完成的不再占位，历史标记仍留在记录里）
+    urgent = [helpers.enrich(r, now) for r in runs
+              if r.get("urgent") and r.get("status") != "已完成"]
+    urgent.sort(key=lambda r: (0 if r.get("type") == "待办项" else 1,
+                               r.get("created_at") or ""))
     return {"counts": counts, "done_week": done_week, "pending": pending,
-            "todo_open": todo_open, "todo_count": len(todo_open)}
+            "todo_open": todo_open, "todo_count": len(todo_open),
+            "urgent": urgent, "urgent_count": len(urgent)}
+
 
 
 # ---------- HTTP 处理 ----------
@@ -347,6 +427,8 @@ class Handler(BaseHTTPRequestHandler):
             _send_json(self, api_list())
         elif p == "/api/summary":
             _send_json(self, api_summary())
+        elif p == "/api/notes":
+            _send_json(self, api_notes_list())
         else:
             self._serve_static(p)
 
@@ -370,9 +452,11 @@ class Handler(BaseHTTPRequestHandler):
     def _post(self):
         p = urlparse(self.path).path
         body = _read_body(self)
-        m = re.match(r"^/api/runs/([^/]+)/(submit|check|rerun|reopen)$", p)
+        m = re.match(r"^/api/runs/([^/]+)/(submit|check|rerun|reopen|urgent)$", p)
         if p == "/api/runs":
             _send_json(self, *api_create(body))
+        elif p == "/api/notes":
+            _send_json(self, *api_note_create(body))
         elif m:
             rid, act = m.group(1), m.group(2)
             if act == "submit":
@@ -383,13 +467,18 @@ class Handler(BaseHTTPRequestHandler):
                 _send_json(self, *api_rerun(rid))
             elif act == "reopen":
                 _send_json(self, *api_reopen(rid))
+            elif act == "urgent":
+                _send_json(self, *api_urgent(rid, body))
         else:
             self.send_error(404)
 
     def _put(self):
         p = urlparse(self.path).path
         m = re.match(r"^/api/runs/([^/]+)$", p)
-        if m:
+        mn = re.match(r"^/api/notes/([^/]+)$", p)
+        if mn:
+            _send_json(self, *api_note_update(mn.group(1), _read_body(self)))
+        elif m:
             _send_json(self, *api_update(m.group(1), _read_body(self)))
         else:
             self.send_error(404)
@@ -397,7 +486,10 @@ class Handler(BaseHTTPRequestHandler):
     def _delete(self):
         p = urlparse(self.path).path
         m = re.match(r"^/api/runs/([^/]+)$", p)
-        if m:
+        mn = re.match(r"^/api/notes/([^/]+)$", p)
+        if mn:
+            _send_json(self, *api_note_delete(mn.group(1)))
+        elif m:
             _send_json(self, *api_delete(m.group(1)))
         else:
             self.send_error(404)

@@ -13,6 +13,8 @@ from datetime import datetime, timedelta
 # 数据文件与本文件同目录
 DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "runs.json")
 
+NOTES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "notes.json")
+
 # 项目名不预设、不写死：一律从台账数据里提取，用户填什么就有什么。
 DEFAULT_PROJECT = "默认项目"
 STATUSES = ["待提交", "运行中", "待看结果", "待办", "已完成", "异常"]
@@ -138,6 +140,7 @@ def enrich(r: dict, now: datetime | None = None) -> dict:
                 overdue = int(-diff)
         elif r.get("status") == "待看结果":
             overdue = int(max(0, -diff))
+    r["urgent"] = bool(r.get("urgent"))
     r["remaining_min"] = remaining
     r["overdue_min"] = overdue
     # 开始时间 === 创建时间（不落库、不需要手动点，读盘时派生）
@@ -160,3 +163,36 @@ def new_id(runs: list) -> str:
         if m:
             max_n = max(max_n, int(m.group(1)))
     return f"r{max_n + 1:04d}"
+
+
+def load_notes() -> list:
+    try:
+        with open(NOTES_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, list) or any(not isinstance(r, dict) for r in data):
+            raise OSError("速记格式错误，请从备份恢复；原文件未修改")
+    except FileNotFoundError:
+        data = []
+    except (json.JSONDecodeError, UnicodeError) as exc:
+        raise OSError("速记无法解析，请从备份恢复；原文件未修改") from exc
+    return data
+
+
+
+def save_notes(notes: list) -> None:
+    """与台账同样的原子写，避免半截写坏。"""
+    tmp = NOTES_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(notes, f, ensure_ascii=False, indent=2)
+    os.replace(tmp, NOTES_FILE)
+
+
+
+def new_note_id(notes: list) -> str:
+    """速记 id：n0001 递增。"""
+    max_n = 0
+    for n in notes:
+        m = re.fullmatch(r"n(\d+)", str(n.get("id", "")))
+        if m:
+            max_n = max(max_n, int(m.group(1)))
+    return f"n{max_n + 1:04d}"

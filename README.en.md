@@ -38,6 +38,14 @@ RunLedger never executes the commands recorded in a task. It uses estimated
 time, rather than polling the real job. The page refreshes every 30 seconds;
 there are no built-in desktop notifications.
 
+## Urgent tasks and quick notes
+
+Flag urgent tasks from the task tree, table, or edit dialog. The urgent queue contains unfinished tasks only; completion preserves the flag in history.
+
+The collapsible Quick Notes sidebar supports Enter to save, Shift+Enter for a new line, and editing or deleting entries. Notes are stored separately in local `notes.json`, excluded from Git and task statistics. Back up both JSON files.
+
+The interface uses installed handwriting fonts with a system fallback; no web fonts are downloaded. Completed children leave the active to-do tree and remain in the table and history.
+
 ## Data and scripts
 
 - Back up `runs.json` by copying it; personal data is excluded from Git.
